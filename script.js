@@ -6,6 +6,7 @@ const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
+
 // Parameters
 const NUM_PARTICLES = 500;
 const PARTICLE_SIZE = 2;
@@ -17,6 +18,12 @@ const GRAVITY = { x: 0, y: 9.81 };
 
 // Arrays to hold particle data
 let particles = [];
+let isMouseDown = false;
+let mouseX = 0;
+let mouseY = 0;
+let particleAddTimer = 0;
+const PARTICLE_ADD_INTERVAL = 0.05; // Adjust this value to control rate
+
 
 // Particle class
 class Particle {
@@ -80,10 +87,10 @@ function initParticles() {
 
 // SPH core functions
 function computeDensityPressure() {
-  for (let i = 0; i < NUM_PARTICLES; i++) {
+  for (let i = 0; i < particles.length; i++) {
     let p_i = particles[i];
     p_i.density = 0;
-    for (let j = 0; j < NUM_PARTICLES; j++) {
+    for (let j = 0; j < particles.length; j++) {
       let p_j = particles[j];
       let dx = p_j.pos.x - p_i.pos.x;
       let dy = p_j.pos.y - p_i.pos.y;
@@ -101,12 +108,12 @@ function computeDensityPressure() {
 }
 
 function computeForces() {
-  for (let i = 0; i < NUM_PARTICLES; i++) {
+  for (let i = 0; i < particles.length; i++) {
     let p_i = particles[i];
     let pressureForce = { x: 0, y: 0 };
     let viscosityForce = { x: 0, y: 0 };
 
-    for (let j = 0; j < NUM_PARTICLES; j++) {
+    for (let j = 0; j < particles.length; j++) {
       if (i === j) continue;
       let p_j = particles[j];
       let dx = p_j.pos.x - p_i.pos.x;
@@ -134,27 +141,64 @@ function computeForces() {
 }
 
 function updateParticles() {
-  for (let i = 0; i < NUM_PARTICLES; i++) {
+  for (let i = 0; i < particles.length; i++) {
     particles[i].update();
   }
 }
 
 function renderParticles() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  for (let i = 0; i < NUM_PARTICLES; i++) {
+  for (let i = 0; i < particles.length; i++) {
     particles[i].draw();
   }
 }
 
+
 // Animation loop
 function animate() {
-  requestAnimationFrame(animate);
-  computeDensityPressure();
-  computeForces();
-  updateParticles();
-  renderParticles();
-}
+    requestAnimationFrame(animate);
+  
+    // Time since last particle was added
+    particleAddTimer += TIME_STEP;
+  
+    if (isMouseDown && particleAddTimer >= PARTICLE_ADD_INTERVAL) {
+      particles.push(new Particle(mouseX, mouseY));
+      particleAddTimer = 0; // Reset timer after adding a particle
+    }
+  
+    computeDensityPressure();
+    computeForces();
+    updateParticles();
+    renderParticles();
+  }
 
 // Start the simulation
 initParticles();
 animate();
+
+// Add event listener
+// Mouse down event
+canvas.addEventListener('mousedown', function(e) {
+    isMouseDown = true;
+    updateMousePosition(e);
+    canvas.style.cursor = 'pointer';
+  });
+  
+  canvas.addEventListener('mouseup', function(e) {
+    isMouseDown = false;
+    canvas.style.cursor = 'crosshair';
+  });
+  
+  // Mouse move event
+  canvas.addEventListener('mousemove', function(e) {
+    updateMousePosition(e);
+  });
+  
+  // Update mouse position
+  function updateMousePosition(e) {
+    let rect = canvas.getBoundingClientRect();
+    mouseX = e.clientX - rect.left;
+    mouseY = e.clientY - rect.top;
+  }
+  
+

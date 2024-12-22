@@ -8,3 +8,7 @@ body, html {
     display: block;
     background-color: #1e1e1e;
   }
+
+  canvas {
+    cursor: crosshair;
+  }
