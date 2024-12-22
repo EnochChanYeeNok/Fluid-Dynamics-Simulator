@@ -55,10 +55,15 @@ class Particle {
     }
   }
 
+  // In Particle.draw()
   draw() {
+    let speed = Math.hypot(this.vel.x, this.vel.y);
+    let maxSpeed = 50;
+    let intensity = Math.min(speed / maxSpeed, 1);
+    let color = `hsl(${200 - intensity * 200}, 100%, 50%)`;
     ctx.beginPath();
     ctx.arc(this.pos.x, this.pos.y, PARTICLE_SIZE, 0, Math.PI * 2);
-    ctx.fillStyle = '#00aaff';
+    ctx.fillStyle = color;
     ctx.fill();
   }
 }
